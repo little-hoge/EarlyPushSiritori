@@ -55,7 +55,8 @@
 
 #### バージョン管理(任意)
 - Github for Unity(https://miyagame.net/github-for-unity/) \
-※登録(https://github.com/)
+※登録(https://github.com/) \
+※使い方(https://qiita.com/toRisouP/items/97c4cddcb735acde2f03)  
 
 #### WebGL画面サイズ自動調整(任意)
 - WebGL responsive template(https://github.com/miguel12345/UnityWebglResponsiveTemplate) \
