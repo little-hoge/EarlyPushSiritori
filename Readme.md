@@ -142,6 +142,7 @@ ButtonObj.onClick.AddListener(関数名);
 #### 部屋情報、プレイヤー情報取得  
 ```C#
 using Photon.Realtime;
+
  // 部屋情報、プレイヤー情報
  Room myroom = PhotonNetwork.CurrentRoom;
  Player player = PhotonNetwork.LocalPlayer;
@@ -150,6 +151,7 @@ using Photon.Realtime;
 #### ユーザー名取得
 ```C#
 using NCMB;
+
 // ユーザー名
 NCMBUser.CurrentUser.UserName;
 ```
@@ -158,6 +160,13 @@ NCMBUser.CurrentUser.UserName;
 #### 注意
 - PUN2で同期するプレハブは**Resources**配下限定
 - [WebGL画面サイズ自動調整(任意)](#webgl%E7%94%BB%E9%9D%A2%E3%82%B5%E3%82%A4%E3%82%BA%E8%87%AA%E5%8B%95%E8%AA%BF%E6%95%B4%E4%BB%BB%E6%84%8F)を使用せずWebGLを使う場合、設定を変える必要あり
+- [WebGL日本語入力(任意)](#webgl%E6%97%A5%E6%9C%AC%E8%AA%9E%E5%85%A5%E5%8A%9B%E4%BB%BB%E6%84%8F)をUnity2019以降で使う場合、環境によって下記に修正する必要あり
+```C#
+  GLInput.cs
+  WebGLInput.CanvasId = "gameContainer"; // "gameContainer" → "unityContainer";
+```
+
+
 
 #### 課題
 - 通信周り
@@ -169,6 +178,8 @@ NCMBUser.CurrentUser.UserName;
 
 #### 未実装
 
+#### 誤記
+- CREATE_X、CREATE_Yが逆
 
 # 流用方法
 #### 必要ファイル  
