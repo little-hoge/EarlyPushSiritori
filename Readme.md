@@ -27,6 +27,7 @@
   - [注意](#%E6%B3%A8%E6%84%8F)
   - [課題](#%E8%AA%B2%E9%A1%8C)
   - [未実装](#%E6%9C%AA%E5%AE%9F%E8%A3%85)
+  - [誤記](#%E8%AA%A4%E8%A8%98)
 - [流用方法](#%E6%B5%81%E7%94%A8%E6%96%B9%E6%B3%95)
   - [必要ファイル](#%E5%BF%85%E8%A6%81%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB)
   - [手順](#%E6%89%8B%E9%A0%86)
@@ -202,10 +203,10 @@ NCMBUser.CurrentUser.UserName;
 6. ファイル＞ビルド設定画面表示した状態で、プロジェクト内の下記Scenesをそれぞれダブルクリックで開き、  
 シーンに追加を選択する  
    ※シーンは選択状態時Deleteで削除可能  
-   ※GameLobyが開始なので**0**に設定する
-    - GameLoby
+   ※GameLoginが開始なので**0**に設定する
     - GameLogin
     - GameMain
+    - GameLoby
     - GameRanking
 ![キャプチャ2](https://user-images.githubusercontent.com/3638785/77194678-be5cc680-6b23-11ea-8f4d-4c463bcaf37c.PNG)
 7. GameLoginをダブルクリックで開き、再生を実行する
