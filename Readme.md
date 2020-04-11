@@ -178,6 +178,7 @@ NCMBUser.CurrentUser.UserName;
 - アニメーション全般  
 
 #### 未実装
+- 不正解時時間加算
 
 #### 誤記
 - CREATE_X、CREATE_Yが逆
