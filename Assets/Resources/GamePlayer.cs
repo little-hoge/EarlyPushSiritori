@@ -4,15 +4,15 @@ using Photon.Realtime;
 using System.Linq;
 using NCMB;
 using System.Collections.Generic;
+using System;
 
 public class GamePlayer : MonoBehaviourPunCallbacks, IPunObservable
 {
-    // パネル情報
+    // 釦プレハブ
     public NumberButtonGenerator NumberButtonGeneratorPrefab;
 
-    // 出題番号に1～ボタン数設定
-    private int QuestionIndex = Data.Instance.P1Score + Data.Instance.P2Score;
-    private List<int> QuestionNumber = new List<int>(Enumerable.Range(1, Function.GetMaxButton()).ToArray());
+    // 前回値
+    private short Last_AnserWordNumber; 
 
     private void Start()
     {
@@ -28,19 +28,18 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunObservable
         Data.Instance.P2Score = 0;
         Data.Instance.P2Name = "";
 
+        // 開始単語設定
+        Last_AnserWordNumber = Data.Instance.AnserWordNumber;
+
         // 自分
         if (photonView.IsMine)
         {
             // プレイヤー1(ホスト)から
             if (photonView.OwnerActorNr == Define.ROOM_OWNER)
             {
-                // 出題番号シャッフル
-                Function.Shuffle(QuestionNumber);
-                Debug.Log("出題番号" + string.Join(", ", QuestionNumber));
-
-                // パネル番号シャッフル
-                Function.Shuffle(Data.Instance.ButtonNumber);
-                Debug.Log("パネル番号" + string.Join(", ", Data.Instance.ButtonNumber));
+                // 釦シャッフル設定
+                NumberButtonGeneratorPrefab.NumberButtonsWordReset();
+                Debug.Log("釦番号" + string.Join(", ", Data.Instance.ButtonNumber));
 
             }
 
@@ -53,26 +52,28 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunObservable
         // 部屋情報
         Room myroom = PhotonNetwork.CurrentRoom;
 
-        // 出題番号
-        QuestionIndex = Data.Instance.P1Score + Data.Instance.P2Score;
-
         // プレイヤー1(ホスト)から
         if (photonView.OwnerActorNr == Define.ROOM_OWNER)
         {
-            // の出題番号に同期
-            Data.Instance.NowQuestionNumber = QuestionNumber[QuestionIndex];
-            //DebugLogger.Log("出題番号更新" + string.Join(", ", QuestionNumber));
+            Data.Instance.NowQuestionWordNumber = Data.Instance.AnserWordNumber;
+            Data.Instance.NowQuestionWordType = Data.Instance.AnserWordType;
+
+            Debug.Log("お題：" + Data.Instance.NowQuestionWordNumber);
+
+
 
         }
+
 
         // 対戦相手が決着前にいなくなった時
         if ((myroom.PlayerCount != myroom.MaxPlayers) && !Data.Instance.GameJudge)
         {
             // 不戦勝にする
-            Data.Instance.P1Score = Define.QUESTION_MAX;
+            Data.Instance.P1Score = Define.SCORE_MAX;
             Data.Instance.P2Score = 0;
             Data.Instance.Disconnect = true;
         }
+
 
     }
 
@@ -81,24 +82,31 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunObservable
     // データを送受信するメソッド
     void IPunObservable.OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
-
         // 送信
         if (photonView.IsMine)
         {
             // プレイヤー1(ホスト)から
             if (photonView.OwnerActorNr == Define.ROOM_OWNER)
             {
-                //出題番号順、パネル表示順を送信
-                stream.SendNext(QuestionNumber.ToArray());
+                // 釦表示順を送信
                 stream.SendNext(Data.Instance.ButtonNumber.ToArray());
-                //  DebugLogger.Log("送信" + string.Join(", ", Data.Instance.ButtonNumber));
-
+                // Debug.Log("送信" + string.Join(", ", Data.Instance.ButtonNumber));
 
             }
-
-            // 自分のスコア名前を送信
+            // 自分のスコア/名前を送信/正解単語番号/単語タイプ
             stream.SendNext(Data.Instance.P1Score);
             stream.SendNext(NCMBUser.CurrentUser.UserName);
+
+
+            // 正解した時のみ送信
+            if (Last_AnserWordNumber != Data.Instance.AnserWordNumber)
+            {
+                stream.SendNext(Data.Instance.AnserWordNumber);
+                stream.SendNext(Data.Instance.AnserWordType);
+                Last_AnserWordNumber = Data.Instance.AnserWordNumber;
+              //  Debug.Log("送信答えられるか：" + Data.Instance.P2AnserNone);
+
+            }
 
 
         }
@@ -109,20 +117,26 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunObservable
             // プレイヤー1(ホスト)から
             if (photonView.OwnerActorNr == Define.ROOM_OWNER)
             {
-                // 出題番号順
-                QuestionNumber.Clear();
-                QuestionNumber.AddRange((int[])stream.ReceiveNext());
-                //DebugLogger.Log("受信出題番号" + string.Join(", ", QuestionNumber));
-
-                // パネル表示順
+                // 釦表示順
                 Data.Instance.ButtonNumber.Clear();
-                Data.Instance.ButtonNumber.AddRange((int[])stream.ReceiveNext());
-                //DebugLogger.Log("受信パネル" + string.Join(", ", Data.Instance.ButtonNumber));
+                Data.Instance.ButtonNumber.AddRange((short[])stream.ReceiveNext());
+                //Debug.Log("受信釦" + string.Join(", ", Data.Instance.ButtonNumber));
+
             }
+
             // スコア名前を受信
-            Data.Instance.P2Score = (int)stream.ReceiveNext();
+            Data.Instance.P2Score = (short)stream.ReceiveNext();
             Data.Instance.P2Name = (string)stream.ReceiveNext();
 
+            // 正解があった時
+            if (stream.Count > Define.NOUPDATE_DATANUM)
+            {
+                Data.Instance.AnserWordNumber = (short)stream.ReceiveNext();
+                Data.Instance.AnserWordType = ((ENUM.eWordType)stream.ReceiveNext());
+               // Debug.Log("受信答えられるか：" + Data.Instance.P2AnserNone);
+            }
+
+            
         }
     }
 

@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,9 +9,8 @@ public class NumberButtonController : MonoBehaviour
     public TimerController TimerController { get; set; }
 
 
-    // ボタンに表示されるテキストと数値
-    public string Text { get; set; }
-    public int Number { get; set; }
+    // ボタン数値
+    public short Number { get; private set; }
 
 
     void Start()
@@ -28,18 +28,46 @@ public class NumberButtonController : MonoBehaviour
     }
 
     // ボタンの情報を設定する
-    public void SetButtonInfos(int number, string text)
+    public void SetButtonInfos(short number)
     {
         this.Number = number; // 押下時の番号
-        this.Text = text;
 
+        /*
+        // 画像無し時用
         // 表示設定
-        this.GetComponentsInChildren<Text>()[0].text = text;
+        this.GetComponentsInChildren<Text>()[0].text = number.ToString();
 
         // 文字サイズ自動調整
         this.GetComponentsInChildren<Text>()[0].resizeTextForBestFit = true;
+        */
 
-    }
+        // 画像オブジェクト名設定
+        List<string> ObjectName = new List<string>() { "Text" };
+
+        for (int index = 1; index < Define.EWORD_NUM; index++)
+        {
+            ObjectName.Add(index.ToString());
+        }
+
+        // 該当画像アクティブ化
+        foreach (var item in ObjectName)
+        {
+
+            // 釦番号と画像番号が一致した時
+            if (number.ToString() == item)
+            {
+                // アクティブ
+                transform.Find(item).gameObject.SetActive(true);
+            }
+            else
+            {
+                // 非アクティブ
+                transform.Find(item).gameObject.SetActive(false);
+            }
+       
+        }
+
+}
 
     // クリック時の処理
     private void OnClick()
@@ -47,17 +75,53 @@ public class NumberButtonController : MonoBehaviour
         // 待ち時間
         if (this.TimerController.IsStarted)
         {
-            // 出題番号とボタン番号を比較
-            if (this.GameDirector.CheckNumber(this.Number))
+            // 出題単語と押下した釦の単語
+            var WordType = Function.CheckWordNumber(this.Number);
+
+            // 不一致以外
+            if (WordType != ENUM.eWordType.None)
             {
+                // 押下した釦の単語
+                string NumberWordStr;
+
+                if (WordType == ENUM.eWordType.Normal)
+                {
+                    NumberWordStr = ((ENUM.eWord)Number).ToString();
+                }
+                else //if (WordType == ENUM.eWordType.Sub)
+                {
+                    NumberWordStr = ((ENUM.eSubWord)Number).ToString();
+                }
+
                 // 正解音を鳴らす
                 SoundManager.Instance.PlaySeByName("Buzzer0");
 
-                // 正解エフェクト表示
-                StartCoroutine("DrawJudgeCorrect");
-
+                
                 // スコア加算
-                Data.Instance.P1Score += 1;
+                // 末端が"ん"の時
+                if (NumberWordStr.Substring(NumberWordStr.Length - 1) == "ん")
+                {
+                    Data.Instance.P1Score += 5;
+                }
+                // サブ読み
+                else if (WordType== ENUM.eWordType.Sub)
+                {
+                    Data.Instance.P1Score += 3;
+                }
+                // 通常読み
+                else
+                {
+                    Data.Instance.P1Score += 1;
+
+                }
+
+                // 正解単語番号、単語タイプを保存
+                Data.Instance.AnserWordNumber = this.Number;
+                Data.Instance.AnserWordType = WordType;
+
+
+                // 正解エフェクト表示
+                StartCoroutine(DrawJudgeCorrect());
 
 
             }
@@ -66,8 +130,12 @@ public class NumberButtonController : MonoBehaviour
                 // 不正解音を鳴らす
                 SoundManager.Instance.PlaySeByName("Buzzer1");
 
+                // 経過時間加算
+                var timerController = GameObject.Find("Timer").GetComponent<TimerController>();
+                timerController.time.msec += timerController.time.sec+Define.PENALTY_TIME;
+
                 // 不正解エフェクト表示
-                StartCoroutine("DrawJudgeIncorrec");
+                StartCoroutine(DrawJudgeIncorrec());
             }
         }
 
@@ -77,7 +145,7 @@ public class NumberButtonController : MonoBehaviour
     // 正解表示
     IEnumerator DrawJudgeCorrect()
     {
-        // 不正解の子オブジェクト検索
+        // 正解の子オブジェクト検索
         var CorrectObj = transform.Find("correct").gameObject;
 
         // 表示
@@ -91,6 +159,8 @@ public class NumberButtonController : MonoBehaviour
 
         // 正しい番号の場合、ボタンを非アクティブにする
         gameObject.SetActive(false);
+
+
     }
 
     // 不正解表示

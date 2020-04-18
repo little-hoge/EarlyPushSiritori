@@ -34,24 +34,17 @@ public class GameDirector : MonoBehaviour
 
     }
 
-
-    // クリックした値の正誤判定
-    public bool CheckNumber(int number)
-    {
-        return number == Data.Instance.NowQuestionNumber;
-    }
-
-
     // クリア処理
     public void ClearGameIf()
     {
-        // 一定数ボタンが消えている場合はクリアとする
-        if (this.GetCleared() <= 0)
+        // 得点を一定数取った場合
+        if (this.GetCleared())
         {
             // タイマーを止める
             var timerController = GameObject.Find("Timer").GetComponent<TimerController>();
             timerController.IsStarted = false;
 
+            // 未決着
             if (!Data.Instance.GameJudge)
             {
                 // 結果を表示 
@@ -133,10 +126,12 @@ public class GameDirector : MonoBehaviour
 
     }
 
+
+
     // クリアの判定
-    public int GetCleared()
+    public bool GetCleared()
     {
-        return Define.QUESTION_MAX - (Data.Instance.P1Score + Data.Instance.P2Score);
+        return (Data.Instance.P1Score >= Define.SCORE_MAX) || (Data.Instance.P2Score >= Define.SCORE_MAX);
     }
 
 }

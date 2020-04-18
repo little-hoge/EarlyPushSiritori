@@ -2,6 +2,7 @@
 using UnityEngine.UI;
 using NCMB;
 using Photon.Pun;
+using System.Text.RegularExpressions;
 
 public class TextController : MonoBehaviour
 {
@@ -9,8 +10,7 @@ public class TextController : MonoBehaviour
 
     private Text Player1;
     private Text Player2;
-    private Text HitNumber;
-    private Text ResidualNumber;
+    private Text QuestionWord;
 
     // Start is called before the first frame update
     void Start()
@@ -20,30 +20,38 @@ public class TextController : MonoBehaviour
         // テキストオブジェクト設定
         Player1 = GameObject.Find("Player1").GetComponent<Text>();
         Player2 = GameObject.Find("Player2").GetComponent<Text>();
-        HitNumber = GameObject.Find("HitNumber").GetComponent<Text>();
-        ResidualNumber = GameObject.Find("ResidualNumber").GetComponent<Text>();
+        QuestionWord = GameObject.Find("QuestionWord").GetComponent<Text>();
 
         // 初期設定
         Player1.text = "";
         Player2.text = "";
-        HitNumber.text = "";
-        ResidualNumber.text = "";
+        QuestionWord.text = "";
 
     }
 
     // Update is called once per frame
     void Update()
     {
+        var NowQuestionWord = ((ENUM.eWord)Data.Instance.NowQuestionWordNumber).ToString();
+
+        // お題が単語(サブ読み)だった時
+        if (Data.Instance.NowQuestionWordType == ENUM.eWordType.Sub)
+        {
+            NowQuestionWord = ((ENUM.eSubWord)Data.Instance.NowQuestionWordNumber).ToString();
+        }
+
+        // お題(終端文字)が長音の場合無視する
+        var NowQuestionWordEnd = Regex.Replace(NowQuestionWord, "ー", "");
+        NowQuestionWordEnd = NowQuestionWordEnd.Substring(NowQuestionWordEnd.Length - 1);
+
         // 複数プレイ
         if (PhotonNetwork.CurrentRoom.MaxPlayers != Define.PLAYR_SINGLE)
         {
-            Player2.text = string.Format("{0}\n{1}", Data.Instance.P2Name, Data.Instance.P2Score);
+            Player2.text = string.Format("{0}\n{1}/{2}", Data.Instance.P2Name, Data.Instance.P2Score, Define.SCORE_MAX);
         }
 
-        Player1.text = string.Format("{0}\n{1}", NCMBUser.CurrentUser.UserName, Data.Instance.P1Score);
-        HitNumber.text = string.Format("出題番号\n{0}", Data.Instance.NowQuestionNumber);
-        ResidualNumber.text = string.Format("残り\n{0}", this.GameDirector.GetCleared());
-
+        Player1.text = string.Format("{0}\n{1}/{2}", NCMBUser.CurrentUser.UserName, Data.Instance.P1Score, Define.SCORE_MAX);
+        QuestionWord.text = string.Format("お題\n{0}→「{1}」", NowQuestionWord, NowQuestionWordEnd);
 
     }
 }
